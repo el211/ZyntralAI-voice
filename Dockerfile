@@ -3,7 +3,9 @@ FROM python:3.10-slim
 
 ENV DEBIAN_FRONTEND=noninteractive PYTHONUNBUFFERED=1
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        git ffmpeg build-essential curl unzip ca-certificates \
+        git ffmpeg pkg-config build-essential curl unzip ca-certificates \
+        libavformat-dev libavcodec-dev libavdevice-dev libavutil-dev \
+        libavfilter-dev libswscale-dev libswresample-dev \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
