@@ -10,12 +10,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
+# Newer pip resolves wheels better than the image default (23.x)
+RUN pip install --no-cache-dir --upgrade pip
+
 # CPU-only PyTorch (smaller, no CUDA)
 RUN pip install --no-cache-dir torch==2.2.2 torchaudio==2.2.2 \
         --index-url https://download.pytorch.org/whl/cpu
 
-# OpenVoice + MeloTTS (installed from source; not cleanly on PyPI)
+# Pre-install a modern PyAV (has cp310 wheels, builds against ffmpeg 7) and the numpy
+# OpenVoice expects, so OpenVoice doesn't try to compile the incompatible av==10 from source.
+RUN pip install --no-cache-dir "av>=11,<15" "numpy==1.22.0"
+
+# OpenVoice — relax its strict av==10 pin so it uses the wheel above
 RUN git clone --depth 1 https://github.com/myshell-ai/OpenVoice.git /opt/OpenVoice \
+    && sed -i -E 's/\bav==10[^ ,'\'']*/av/g' /opt/OpenVoice/requirements.txt /opt/OpenVoice/setup.py 2>/dev/null || true \
     && pip install --no-cache-dir -e /opt/OpenVoice
 RUN git clone --depth 1 https://github.com/myshell-ai/MeloTTS.git /opt/MeloTTS \
     && pip install --no-cache-dir -e /opt/MeloTTS \
